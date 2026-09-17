@@ -127,9 +127,16 @@
     <a id="direct-btn" href="https://purstream.ad/" target="_blank" style="display: none; margin-top: 24px; color: #e24966; text-decoration: none; font-size: 0.85rem; padding: 6px 14px; border: 1px solid rgba(226, 73, 102, 0.4); border-radius: 8px;">Ouvrir directement ↗</a>
   </div>
 
+  <!-- Bouton flottant pour iOS permettant d'ouvrir le lecteur natif Apple si désiré -->
+  <a id="ios-player-btn" href="https://purstream.ad/" target="_blank" style="display: none; position: fixed; bottom: 18px; right: 18px; z-index: 999; background: rgba(226, 73, 102, 0.9); backdrop-filter: blur(10px); color: #fff; text-decoration: none; font-size: 0.78rem; font-weight: 600; padding: 8px 14px; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); align-items: center; gap: 6px;">
+    <span>🎬 Lecteur Apple Plein Écran ↗</span>
+  </a>
+
   <iframe id="app-frame"
-          allow="autoplay; fullscreen; picture-in-picture; encrypted-media; clipboard-write; web-share"
-          allowfullscreen>
+          allow="autoplay *; fullscreen *; picture-in-picture *; encrypted-media *; web-share *"
+          allowfullscreen="true"
+          webkitallowfullscreen="true"
+          mozallowfullscreen="true">
   </iframe>
 
   <script>
@@ -146,6 +153,14 @@
     const statusText = document.getElementById('status-text');
     const domainText = document.getElementById('domain-text');
     const directBtn = document.getElementById('direct-btn');
+    const iosBtn = document.getElementById('ios-player-btn');
+
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+    if (isIOS && iosBtn) {
+      iosBtn.style.display = 'inline-flex';
+    }
 
     function hideSplash() {
       if (!splash.classList.contains('hidden')) {
@@ -174,6 +189,7 @@
       try {
         domainText.textContent = new URL(currentUrl).hostname;
         directBtn.href = currentUrl;
+        if (iosBtn) iosBtn.href = currentUrl;
       } catch (e) {}
 
       // 2. Pré-charger immédiatement l'iframe sans attendre l'API !
@@ -201,6 +217,7 @@
             localStorage.setItem('purstream_active_url', data.url);
             domainText.textContent = new URL(data.url).hostname;
             directBtn.href = data.url;
+            if (iosBtn) iosBtn.href = data.url;
             frame.src = data.url;
           }
         }
