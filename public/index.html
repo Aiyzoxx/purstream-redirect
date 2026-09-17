@@ -119,11 +119,12 @@
   <div id="splash">
     <img src="/android-chrome-192x192.png" alt="Purstream" class="app-icon">
     <div class="spinner"></div>
-    <p class="loading-text" id="status-text">Recherche de l'adresse officielle...</p>
-    <div class="domain-badge" id="domain-badge" style="display: none;">
+    <p class="loading-text" id="status-text">Lancement de Purstream...</p>
+    <div class="domain-badge" id="domain-badge">
       <span class="dot"></span>
-      <span id="domain-text">En ligne</span>
+      <span id="domain-text">purstream.ad</span>
     </div>
+    <a id="direct-btn" href="https://purstream.ad/" target="_blank" style="display: none; margin-top: 24px; color: #e24966; text-decoration: none; font-size: 0.85rem; padding: 6px 14px; border: 1px solid rgba(226, 73, 102, 0.4); border-radius: 8px;">Ouvrir directement ↗</a>
   </div>
 
   <iframe id="app-frame"
@@ -132,49 +133,80 @@
   </iframe>
 
   <script>
-    // Enregistrement du Service Worker pour permettre l'installation PWA
+    // Enregistrement du Service Worker pour installation PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').catch(() => {});
       });
     }
 
+    const DEFAULT_URL = 'https://purstream.ad/';
+    const frame = document.getElementById('app-frame');
+    const splash = document.getElementById('splash');
+    const statusText = document.getElementById('status-text');
+    const domainText = document.getElementById('domain-text');
+    const directBtn = document.getElementById('direct-btn');
+
+    function hideSplash() {
+      if (!splash.classList.contains('hidden')) {
+        splash.classList.add('hidden');
+      }
+    }
+
+    // Afficher le bouton de secours si la connexion est trop lente (au bout de 3.5s)
+    setTimeout(() => {
+      if (!splash.classList.contains('hidden')) {
+        directBtn.style.display = 'inline-block';
+      }
+    }, 3500);
+
     async function init() {
-      const statusText = document.getElementById('status-text');
-      const domainBadge = document.getElementById('domain-badge');
-      const domainText = document.getElementById('domain-text');
-      const splash = document.getElementById('splash');
-      const frame = document.getElementById('app-frame');
-
+      // 1. Récupérer immédiatement la dernière URL connue (ou par défaut purstream.ad)
+      let currentUrl = DEFAULT_URL;
       try {
-        // Appel de notre API Edge Vercel (sans blocage CORS)
-        const res = await fetch('/api/status');
-        const data = await res.json();
+        const cached = localStorage.getItem('purstream_active_url');
+        if (cached && cached.startsWith('http')) {
+          currentUrl = cached;
+        }
+      } catch (e) {}
 
-        if (data && data.url) {
-          const urlObj = new URL(data.url);
-          domainText.textContent = 'Connecté à ' + urlObj.hostname;
-          domainBadge.style.display = 'inline-flex';
-          statusText.textContent = 'Lancement de Purstream...';
+      // Mettre à jour l'affichage
+      try {
+        domainText.textContent = new URL(currentUrl).hostname;
+        directBtn.href = currentUrl;
+      } catch (e) {}
 
-          frame.src = data.url;
+      // 2. Pré-charger immédiatement l'iframe sans attendre l'API !
+      frame.src = currentUrl;
 
-          // Transition fluide
-          frame.onload = () => {
-            setTimeout(() => splash.classList.add('hidden'), 400);
-          };
-          // Sécurité si onload tarde
-          setTimeout(() => splash.classList.add('hidden'), 2200);
-          return;
+      // 3. Cacher le splash dès que le site commence à charger
+      frame.onload = () => {
+        setTimeout(hideSplash, 300);
+      };
+      // Sécurité maximale : disparait quoi qu'il arrive après 1.8s
+      setTimeout(hideSplash, 1800);
+
+      // 4. Vérifier en arrière-plan si le domaine officiel a changé
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
+
+        const res = await fetch('/api/status', { signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.url && data.url !== currentUrl) {
+            console.log('Nouveau domaine officiel détecté:', data.url);
+            localStorage.setItem('purstream_active_url', data.url);
+            domainText.textContent = new URL(data.url).hostname;
+            directBtn.href = data.url;
+            frame.src = data.url;
+          }
         }
       } catch (err) {
-        console.error(err);
+        console.warn("Vérification d'URL en tâche de fond terminée:", err);
       }
-
-      // Fallback
-      statusText.textContent = 'Redirection de secours...';
-      frame.src = 'https://purstream.wiki/';
-      setTimeout(() => splash.classList.add('hidden'), 1500);
     }
 
     init();
