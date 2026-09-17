@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redirection vers Purstream Officiel...</title>
+  <link rel="icon" href="https://purstream.wiki/assets/icones/favicon.png">
+  <style>
+    :root {
+      --bg: #0b0c10;
+      --card-bg: rgba(26, 29, 41, 0.7);
+      --accent: #e24966;
+      --accent-glow: rgba(226, 73, 102, 0.35);
+      --text: #f0f2f5;
+      --text-muted: #9ba1b0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 50% 20%, #1a162b 0%, var(--bg) 70%);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--text);
+      padding: 20px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 40px;
+      width: 100%;
+      max-width: 440px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px var(--accent-glow);
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 24px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #ff5e7e 0%, var(--accent) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 25px var(--accent-glow);
+    }
+
+    .logo-icon svg {
+      width: 32px;
+      height: 32px;
+      fill: white;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 28px;
+    }
+
+    .spinner-container {
+      margin: 20px auto 28px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .btn {
+      display: inline-block;
+      width: 100%;
+      padding: 14px 20px;
+      background: linear-gradient(135deg, #ff5e7e 0%, var(--accent) 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+      box-shadow: 0 8px 20px var(--accent-glow);
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(226, 73, 102, 0.5);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      padding: 4px 10px;
+      border-radius: 20px;
+      margin-top: 20px;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      background: #10b981;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/>
+      </svg>
+    </div>
+    <h1>Redirection en cours...</h1>
+    <p>Recherche automatique de l'adresse officielle active de Purstream.</p>
+
+    <div class="spinner-container">
+      <div class="spinner"></div>
+    </div>
+
+    <a id="redirect-link" href="https://purstream.wiki/" class="btn">Accéder manuellement</a>
+
+    <div>
+      <div class="status-badge">
+        <span class="dot"></span>
+        <span>Vérification du statut en temps réel</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function redirect() {
+      try {
+        const res = await fetch("https://purstream.wiki/api/server-status");
+        if (res.ok) {
+          const data = await res.json();
+          const main = data.servers?.find(s => s.id === 'main');
+          if (main && main.url) {
+            document.getElementById("redirect-link").href = main.url;
+            window.location.replace(main.url);
+            return;
+          }
+        }
+      } catch (e) {
+        console.error("Erreur client:", e);
+      }
+      // Fallback
+      window.location.replace("https://purstream.wiki/");
+    }
+
+    redirect();
+  </script>
+</body>
+</html>
