@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Purstream</title>
+
+  <!-- PWA & Mobile Meta Tags -->
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <meta name="theme-color" content="#121118">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Purstream">
+  <meta name="application-name" content="Purstream">
+  <meta name="msapplication-TileColor" content="#121118">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #121118;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #fff;
+    }
+
+    /* Splash Screen Initial */
+    #splash {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 50% 30%, #1c182a 0%, #121118 70%);
+      z-index: 1000;
+      transition: opacity 0.5s ease, visibility 0.5s;
+    }
+
+    #splash.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .app-icon {
+      width: 88px;
+      height: 88px;
+      border-radius: 22px;
+      margin-bottom: 24px;
+      box-shadow: 0 12px 35px rgba(226, 73, 102, 0.35);
+      animation: pulseLogo 2s infinite ease-in-out;
+    }
+
+    @keyframes pulseLogo {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+
+    .spinner {
+      width: 38px;
+      height: 38px;
+      border: 3.5px solid rgba(255, 255, 255, 0.1);
+      border-top-color: #e24966;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 18px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-size: 0.95rem;
+      color: #9ba1b0;
+      letter-spacing: 0.3px;
+    }
+
+    .domain-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      padding: 5px 12px;
+      border-radius: 20px;
+      margin-top: 18px;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      background: #10b981;
+      border-radius: 50%;
+    }
+
+    /* Fullscreen App Frame */
+    #app-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+      background: #121118;
+    }
+  </style>
+</head>
+<body>
+  <div id="splash">
+    <img src="/android-chrome-192x192.png" alt="Purstream" class="app-icon">
+    <div class="spinner"></div>
+    <p class="loading-text" id="status-text">Recherche de l'adresse officielle...</p>
+    <div class="domain-badge" id="domain-badge" style="display: none;">
+      <span class="dot"></span>
+      <span id="domain-text">En ligne</span>
+    </div>
+  </div>
+
+  <iframe id="app-frame"
+          allow="autoplay; fullscreen; picture-in-picture; encrypted-media; clipboard-write; web-share"
+          allowfullscreen>
+  </iframe>
+
+  <script>
+    // Enregistrement du Service Worker pour permettre l'installation PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
+    }
+
+    async function init() {
+      const statusText = document.getElementById('status-text');
+      const domainBadge = document.getElementById('domain-badge');
+      const domainText = document.getElementById('domain-text');
+      const splash = document.getElementById('splash');
+      const frame = document.getElementById('app-frame');
+
+      try {
+        // Appel de notre API Edge Vercel (sans blocage CORS)
+        const res = await fetch('/api/status');
+        const data = await res.json();
+
+        if (data && data.url) {
+          const urlObj = new URL(data.url);
+          domainText.textContent = 'Connecté à ' + urlObj.hostname;
+          domainBadge.style.display = 'inline-flex';
+          statusText.textContent = 'Lancement de Purstream...';
+
+          frame.src = data.url;
+
+          // Transition fluide
+          frame.onload = () => {
+            setTimeout(() => splash.classList.add('hidden'), 400);
+          };
+          // Sécurité si onload tarde
+          setTimeout(() => splash.classList.add('hidden'), 2200);
+          return;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+
+      // Fallback
+      statusText.textContent = 'Redirection de secours...';
+      frame.src = 'https://purstream.wiki/';
+      setTimeout(() => splash.classList.add('hidden'), 1500);
+    }
+
+    init();
+  </script>
+</body>
+</html>

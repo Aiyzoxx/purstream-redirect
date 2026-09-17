@@ -1,41 +1,40 @@
-# 🚀 Purstream Auto-Redirect (Vercel Edge)
+# 📱 Purstream PWA & Auto-Redirect (Vercel)
 
-Projet léger et ultra-rapide conçu pour être déployé sur **Vercel**. Dès qu'un utilisateur visite votre lien (ex: `https://mon-purstream.vercel.app`), il est **redirigé instantanément vers la dernière URL officielle active** de Purstream sans intervention manuelle.
+Application Web Progressive (PWA) de **Purstream** déployable sur **Vercel**.
 
----
-
-## ⚡ Comment ça marche ?
-
-1. Une fonction **Vercel Edge** (`api/index.js`) interroge l'API de monitoring en temps réel de `https://purstream.wiki/api/server-status`.
-2. Elle extrait l'URL active du serveur principal (`id: "main"`).
-3. Elle renvoie immédiatement une redirection HTTP **307 (Temporary Redirect)** vers le bon domaine (ex: `https://purstream.ad/`).
-4. Si l'API est indisponible, un fallback automatique renvoie vers `https://purstream.wiki/`.
-5. Aucun cache n'est conservé (`no-store, no-cache`) pour garantir que chaque clic obtienne toujours le domaine le plus récent.
+Cette application résout définitivement le problème des changements d'adresse :
+1. **Elle s'installe comme une vraie application native** sur votre PC (Windows/Mac) ou téléphone (Android/iOS) avec l'icône officielle de Purstream.
+2. **Elle reste toujours en mode application** (fenêtre autonome sans barre d'adresse de navigateur).
+3. À chaque lancement, elle contacte automatiquement l'API en temps réel pour **charger la dernière adresse officielle active** (ex: `purstream.ad`, `purstream.la`, etc.). Même si Purstream change d'adresse demain, votre application continuera de fonctionner sans avoir besoin de la réinstaller !
 
 ---
 
-## 🌐 Déploiement sur Vercel
+## 🚀 Comment installer l'application sur vos appareils
 
-### Méthode 1 — Via GitHub Desktop & Vercel Dashboard (Recommandé)
-1. Ouvrez **GitHub Desktop**.
-2. Allez dans **File** > **Add Local Repository...** et sélectionnez ce dossier (`purstream-redirect`).
-3. Cliquez sur **Publish repository** pour envoyer le code sur votre compte GitHub.
-4. Rendez-vous sur votre tableau de bord [Vercel](https://vercel.com).
-5. Cliquez sur **Add New...** > **Project** et importez le dépôt GitHub `purstream-redirect`.
-6. Cliquez sur **Deploy** (aucune variable d'environnement requise).
+Une fois déployé sur Vercel :
 
-### Méthode 2 — Via la CLI Vercel
-Dans un terminal ouvert dans ce dossier :
-```bash
-npx vercel
-```
-Appuyez sur Entrée pour valider les options par défaut.
+### Sur PC / Mac (Google Chrome, Microsoft Edge, Brave) :
+1. Ouvrez votre lien Vercel (ex: `https://purstream-redirect.vercel.app`).
+2. Dans la barre d'adresse tout à droite, cliquez sur l'icône **« Installer l'application Purstream »** (ou menu `...` > *« Installer Purstream »*).
+3. Cliquez sur **Installer**.
+4. L'application Purstream s'ouvre dans sa propre fenêtre indépendante et crée un raccourci sur votre Bureau et dans le menu Démarrer !
+
+### Sur Android (Chrome) :
+1. Ouvrez le lien sur Chrome.
+2. Appuyez sur le menu (les 3 points en haut à droite) > **« Ajouter à l'écran d'accueil »** ou **« Installer l'application »**.
+3. L'icône Purstream apparaît parmi vos applications.
+
+### Sur iPhone / iPad (Safari) :
+1. Ouvrez le lien dans Safari.
+2. Appuyez sur le bouton de partage (icône avec la flèche vers le haut).
+3. Sélectionnez **« Sur l'écran d'accueil »**.
 
 ---
 
-## 📱 Utilisation
+## 🛠️ Structure technique
 
-Une fois déployé, Vercel vous donne une URL du type :
-> `https://purstream-redirect-xxx.vercel.app`
-
-Il vous suffit de mettre cette URL en **favori** sur votre téléphone ou ordinateur : vous n'aurez plus jamais à chercher la nouvelle adresse manuellement !
+- **`public/manifest.json` :** Manifeste Web App avec le thème officiel sombre (`#121118`), les icônes haute résolution et le mode `standalone`.
+- **`public/sw.js` :** Service Worker validant les critères d'installation PWA des navigateurs.
+- **`public/index.html` :** Conteneur plein écran fluide avec splash screen initial aux couleurs de Purstream.
+- **`api/status.js` :** Fonction Vercel Edge qui interroge l'API de monitoring sans blocage CORS et fournit le domaine actif.
+- **`api/redirect.js` :** Endpoint alternatif pour ceux qui souhaitent une redirection HTTP 307 brute.
