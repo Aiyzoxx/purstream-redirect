@@ -4,11 +4,6 @@
     {
       "source": "/direct",
       "destination": "/api/redirect"
-    },
-    {
-      "source": "/((?!api/|.*\\.[\\w]+$).*)",
-      "destination": "/index.html"
-    }
   ],
   "headers": [
     {
